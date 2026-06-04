@@ -1,208 +1,155 @@
 import streamlit as st
+import pandas as pd
 import json
 import os
 import plotly.graph_objects as go
 
-# Page Configuration
-st.set_page_config(
-    page_title="GenZ Mental Health Advice Engine", 
-    layout="wide",
-    initial_sidebar_state="expanded"
-)
+st.set_page_config(page_title="GenZ Chatbot Profile & Strategy Engine", layout="wide")
 
-# Custom Styling for modern Advice Blocks
-st.markdown("""
-<style>
-    .advice-header {
-        font-size: 20px;
-        font-weight: bold;
-        color: #1E1B4B;
-        margin-bottom: 10px;
-    }
-    .low-stress {
-        background-color: #f0fdf4;
-        padding: 20px;
-        border-radius: 10px;
-        border-left: 6px solid #16a34a;
-        margin-bottom: 15px;
-    }
-    .med-stress {
-        background-color: #fffbeb;
-        padding: 20px;
-        border-radius: 10px;
-        border-left: 6px solid #d97706;
-        margin-bottom: 15px;
-    }
-    .high-stress {
-        background-color: #fef2f2;
-        padding: 20px;
-        border-radius: 10px;
-        border-left: 6px solid #dc2626;
-        margin-bottom: 15px;
-    }
-    .slang-chip {
-        background-color: #e0e7ff;
-        color: #4338ca;
-        padding: 4px 10px;
-        border-radius: 20px;
-        font-size: 13px;
-        font-weight: 500;
-        display: inline-block;
-        margin-right: 5px;
-    }
-</style>
-""", unsafe_allow_html=True)
+st.title("📊 Chatbot Dataset Fine-Tuning & Prompt Strategy Engine")
+st.write("Enter your profile metrics and diagnostic attributes below to see how your simulated query matches up against dataset baselines and advice tiers.")
 
-st.title("🧠 Adaptive GenZ Stress Response & Advice Engine")
-st.write("Input a customized stress level to evaluate matching conversational tactics and clinical guidance frameworks.")
-
-# --- 1. DATASET SCHEMA FALLBACK ---
+# 1. Load your baseline dataset safely
 @st.cache_data
-def load_metadata_safely():
+def load_data():
     filename = "teen-mental-health-chatbot-dataset-metadata.json"
     if os.path.exists(filename):
         with open(filename, "r", encoding="utf-8") as file:
             return json.load(file)
     else:
-        # Graceful schema fallback so the application survives runtime standalone
+        # Graceful schema fallback to ensure app compiles
         return {
-            "alternateName": "Dataset for fine tuning mental health chatbot aimed at teenagers[cite: 1]",
+            "alternateName": "Dataset for fine tuning mental health chatbot aimed at teenagers",
             "license": "MIT"
         }
 
-metadata = load_metadata_safely()
+metadata = load_data()
 
-# --- 2. SIDEBAR CONFIGURATION ---
-st.sidebar.markdown("### 🛠️ System Reference")
-st.sidebar.markdown(f"**Target Objective:**\n{metadata.get('alternateName')}")
-st.sidebar.markdown("---")
-st.sidebar.markdown("### 📊 Dataset Balance Target")
-st.sidebar.write("• **60%** Negative/Anxious Spectrum[cite: 1]")
-st.sidebar.write("• **40%** Positive/Neutral Spectrum[cite: 1]")
+# Define structural mental health categories evaluated in the dataset
+categories = [
+    'Anxiety & Stress', 'Sadness & Depression', 'Insecurity & Self-Image', 
+    'Peer Relationships & Loneliness', 'Academic & Finals Pressure', 'Daily Fatigue', 
+    'Hope & Future Outlook', 'Resilience Training', 'Peer Support Networks', 
+    'Grounding Exercises', 'Clinical Distress Markers', 'General Conversational'
+]
 
-# --- 3. HIGH LEVEL OVERVIEW ---
-st.subheader("📌 Global Dataset Support Overview")
-col_stat1, col_stat2, col_stat3 = st.columns(3)
-with col_stat1:
-    st.metric(label="Total Blueprint Lines", value="200 Dialogues")
-with col_stat2:
-    st.metric(label="Target Demographic", value="Teenagers / Gen-Z[cite: 1]")
-with col_stat3:
-    st.metric(label="Emergency Response Line", value="1-800-273-8255[cite: 1]")
-
-st.markdown("---")
-
-# --- 4. INTERACTIVE STRESS CONTROL CENTER ---
-st.markdown("### 📋 Step 1: Adjust Stress Metrics")
-with st.form("advice_generator_form"):
+# 2. Setup the User Input Form with a Submit Button
+with st.form("user_budget_form"):
+    st.subheader("📋 Step 1: Your Session Profile & Diagnostic Scores")
     
-    # Large responsive slider
-    user_stress = st.slider(
-        "Select Current Stress Level Baseline:", 
-        min_value=1, 
-        max_value=10, 
-        value=5,
-        help="1-3: Low/Manageable | 4-7: Moderate/Validation Needed | 8-10: High/Action Required"
-    )
-    
-    # FIXED: Split layout creation and block instantiation correctly here
-    col_input1, col_input2 = st.columns(2)
-    with col_input1:
-        primary_worry = st.selectbox(
-            "Primary Stress Core Subject:",
-            ["Academic / Finals Pressure", "Social Isolation & Peer Relationships", "Self-Image & Comparison Insecurities", "General Daily Fatigue"]
-        )
-    with col_input2:
-        use_slang_responses = st.checkbox("Mirror Relatable Teen Tone/Slang phrases", value=True)
+    # Form layout columns (Preserved original 3-column structural placement)
+    col_p1, col_p2, col_p3 = st.columns(3)
+    with col_p1:
+        user_name = st.text_input("User/Profile Name:", value="Alex")
+    with col_p2:
+        user_age = st.number_input("Target User Age Filter:", min_value=13, max_value=19, value=16)
+    with col_p3:
+        user_income = st.number_input("Total Manual Evaluation Stress Score (1-10 Scale):", min_value=1, max_value=10, value=7)
         
-    submit_btn = st.form_submit_button(label="🎯 Generate Targeted Advice & Strategy")
-
-
-# --- 5. ADAPTIVE ADVICE & SIMULATION OUTPUT ---
-if submit_btn:
     st.markdown("---")
-    st.markdown(f"## ⚡ Strategy Engine Output for Stress Level {user_stress}/10")
+    st.markdown("##### Enter your estimated emotional trigger scores (0 to 100 max weight):")
     
-    # Categorize Advice Tiers
-    if user_stress <= 3:
-        # LOW STRESS TIER
-        st.markdown(f"""
-        <div class="low-stress">
-            <div class="advice-header">🟢 Tier 1 Strategy: Reinforce Positive/Neutral Resilience</div>
-            <p>Your current level falls within the dataset's <b>40% positive/neutral buffer zone</b>[cite: 1]. Focus is placed on positive validation and emotional grounding strategies.</p>
-            <ul>
-                <li><b>Actionable Advice:</b> Remind yourself of small positive events. Did you get a good grade or share a laugh with a friend today? Document it[cite: 1].</li>
-                <li><b>Mental Exercise:</b> Grounding exercise. Step back from the workload for 15 minutes to reset your cognitive baselines.</li>
-            </ul>
-        </div>
-        """, unsafe_allow_html=True)
-        
-    elif 4 <= user_stress <= 7:
-        # MODERATE STRESS TIER
-        st.markdown(f"""
-        <div class="med-stress">
-            <div class="advice-header">🟡 Tier 2 Strategy: Active Validation & Supportive Venting</div>
-            <p>Your situation maps into the core <b>60% negative emotional range</b> of the training dataset[cite: 1]. Active validation is prioritized over direct problem-solving.</p>
-            <ul>
-                <li><b>Actionable Advice:</b> It is completely valid to feel overwhelmed by <b>{primary_worry}</b> right now[cite: 1]. Do not force immediate toxic positivity; allow space to vent[cite: 1].</li>
-                <li><b>Mental Exercise:</b> Brain-dump journal. Spend 5 minutes writing down every single item causing cognitive friction, then visually separate what you can control from what you cannot.</li>
-            </ul>
-        </div>
-        """, unsafe_allow_html=True)
-        
-    else:
-        # HIGH STRESS TIER
-        st.markdown(f"""
-        <div class="high-stress">
-            <div class="advice-header">🔴 Tier 3 Strategy: Escalation Protocol & Crisis De-escalation</div>
-            <p>Critical distress marker detected. Automated safety systems must bypass casual dialogue scripts and switch to explicit protective guidance.</p>
-            <ul>
-                <li><b>Actionable Advice:</b> High-intensity stress spikes regarding <b>{primary_worry}</b> require human-in-the-loop support networks. Reach out to trusted peers, family, or counselors.</li>
-                <li><b>Emergency Resource:</b> If thoughts turn toward self-harm or feel completely unmanageable, connect with the structured support line immediately at <b>1-800-273-8255</b>[cite: 1].</li>
-            </ul>
-        </div>
-        """, unsafe_allow_html=True)
+    # Split the categories into two side-by-side columns for a clean look
+    col_c1, col_c2 = st.columns(2)
+    user_values = {}
+    
+    for i, cat in enumerate(categories):
+        # Even indexes go to column 1, odd to column 2
+        with col_c1 if i % 2 == 0 else col_c2:
+            # Setting placeholder starting weights based on the 60/40 negative-to-positive dataset split
+            if "Anxiety" in cat or "Sadness" in cat or "Insecurity" in cat or "Pressure" in cat:
+                default_val = 65
+            elif "Hope" in cat or "Resilience" in cat:
+                default_val = 40
+            else:
+                default_val = 25
+            user_values[cat] = st.number_input(f"{cat} Weight", min_value=0, max_value=100, value=default_val)
+            
+    # Form Submission button
+    submit_button = st.form_submit_button(label="Analyze & Calculate Percentages")
 
-    # Tone Profile Summary Visual Blocks
-    st.markdown("### 💬 Conversational Tone Adjustment Matrix")
-    if use_slang_responses:
-        st.markdown("""
-        <span class="slang-chip">"freaking out" mirroring allowed</span>
-        <span class="slang-chip">"vent" context triggers on</span>
-        <span class="slang-chip">"spill the tea" casual phrasing active</span>
-        """, unsafe_allow_html=True)
-        st.caption("Approachable, peer-level framing is turned on to make the support advice feel organic[cite: 1].")
-    else:
-        # FIXED: Resolved outer vs inner single-quote crash here
-        st.markdown('<span class="slang-chip">Standard Professional English Mode</span>', unsafe_allow_html=True)
-        st.caption("Standard clinical validation layout selected.")
-
-    # --- 6. INTERACTIVE GAUGES & CHARTS ---
+# 3. Process data ONLY after the form is submitted
+if submit_button:
     st.markdown("---")
-    st.markdown("### 📊 Dataset Alignment Visualizer")
+    st.subheader(f"👋 Results and Strategy for {user_name} (Age {user_age})")
     
-    # Generate dynamic Plotly Gauge chart
-    fig = go.Figure(go.Indicator(
-        mode = "gauge+number",
-        value = user_stress,
-        domain = {'x': [0, 1], 'y': [0, 1]},
-        title = {'text': "Current Score Target Range", 'font': {'size': 20}},
-        gauge = {
-            'axis': {'range': [None, 10], 'tickwidth': 1, 'tickcolor': "darkblue"},
-            'bar': {'color': "#4338ca"},
-            'bgcolor': "white",
-            'borderwidth': 2,
-            'bordercolor': "gray",
-            'steps': [
-                {'range': [1, 3.9], 'color': '#f0fdf4'},
-                {'range': [4, 7.9], 'color': '#fffbeb'},
-                {'range': [8, 10], 'color': '#fef2f2'}
-            ],
-        }
+    # Mathematical total weight calculation
+    total_allocated = sum(user_values.values())
+    allocation_percentage = (total_allocated / 500) * 100 # Scaled against standard composite baseline max
+    
+    # Check stress triage alert tiers using your custom slider input variable (user_income)
+    if user_income >= 8:
+        st.error(f"🚨 **Critical Distress Notice:** Assigned Stress Level ({user_income}/10) requires immediate escalation framework routing to crisis channels: **1-800-273-8255**.")
+    elif 4 <= user_income <= 7:
+        st.warning(f"⚠️ **Moderate Distress Validation:** Assigned Stress Level ({user_income}/10) matches the dataset's **60% negative emotional buffer**. Employ empathetic mirroring: *'That really sucks to feel that way. Wanna talk about what's got you down?'*")
+    else:
+        st.success(f"✅ **Balanced Resiliency Zone:** Assigned Stress Level ({user_income}/10) maps within the **40% neutral/positive spectrum**. Apply validation techniques to sustain growth.")
+
+    # KPI Summary Cards (Structured exactly like your original request)
+    kpi1, kpi2, kpi3 = st.columns(3)
+    kpi1.metric("Evaluated Stress Score", f"{user_income} / 10")
+    kpi2.metric("Total Cumulative Input Weights", f"{total_allocated} Units")
+    kpi3.metric("Composite Density Index (%)", f"{allocation_percentage:.1f}%")
+
+    # 4. Process Target Blueprint Benchmark Baselines (from JSON properties metadata)
+    # 60% of focus targeting Negative Emotional spectrum topics vs 40% targeting Neutral/Positive Resilience
+    peer_averages = [60.0 if i < 6 else 40.0 for i in range(len(categories))]
+    user_list_values = [user_values[cat] for cat in categories]
+
+    # 5. Plotly Grouped Bar Chart Setup (With original barmode bug fix retained)
+    fig_comp = go.Figure()
+
+    # User input weight trace
+    fig_comp.add_trace(go.Bar(
+        x=categories,
+        y=user_list_values,
+        name=f"{user_name}'s Selected Profile Matrix",
+        marker_color='#4F46E5'
     ))
-    
-    fig.update_layout(height=350, margin=dict(t=30, b=10))
-    st.plotly_chart(fig, use_container_width=True)
 
+    # Target baseline benchmark trace
+    fig_comp.add_trace(go.Bar(
+        x=categories,
+        y=peer_averages,
+        name="Target Balanced Dataset Training Baseline",
+        marker_color='#9CA3AF'
+    ))
+
+    fig_comp.update_layout(
+        barmode='group',  
+        title={
+            'text': "Your Prompt Parameter Composition vs. Chatbot Training Baseline Target",
+            'y': 0.95,
+            'x': 0.5,
+            'xanchor': 'center'
+        },
+        xaxis_title="Diagnostic & Emotional Classification Sectors",
+        yaxis_title="Attribute Weight / Density Intensity",
+        legend_title="Comparison Matrices",
+        template="plotly_white",
+        height=550,
+        margin=dict(t=80, b=40)
+    )
+
+    # Render layout in dashboard
+    st.plotly_chart(fig_comp, use_container_width=True)
+
+    # 6. Structured Breakdown Grid displaying calculations for every individual item
+    st.markdown("### Detailed Itemized Breakdown & Alignment Strategies")
+    
+    breakdown_data = []
+    for idx, cat in enumerate(categories):
+        item_user_val = user_values[cat]
+        item_peer_val = peer_averages[idx]
+        item_percentage = (item_user_val / (total_allocated if total_allocated > 0 else 1)) * 100
+        
+        breakdown_data.append({
+            "Category Area": cat,
+            "Your Score Density": f"{item_user_val} Units",
+            "Share of Total Diagnostic Portfolio (%)": f"{item_percentage:.1f}%",
+            "Target Ideal Baseline Split": f"{item_peer_val}%"
+        })
+        
+    st.table(pd.DataFrame(breakdown_data))
 else:
-    st.info("💡 Adjust the slider controls above and press **'Generate Targeted Advice & Strategy'** to simulate the safety and advice protocols.")
+    st.info("💡 Fill out the form fields above and click **'Analyze & Calculate Percentages'** to generate your operational diagnostic response reports.")
